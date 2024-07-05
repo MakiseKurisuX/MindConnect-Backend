@@ -9,6 +9,11 @@ const PORT = process.env.PORT || 3000;
 
 const quotesFolder = path.join(__dirname, 'quotes');
 
+const excludeUrls = [
+  'https://storage.googleapis.com/mindconnect-218f4.appspot.com/quotes',
+  'https://storage.googleapis.com/mindconnect-218f4.appspot.com/quotes/'
+];
+
 const deleteAllDocuments = async () => {
   try {
     const quotesSnapshot = await db.collection('Quotes').get();
@@ -25,7 +30,15 @@ const addRandomImages = async () => {
   try {
     const [files] = await bucket.getFiles({ prefix: 'quotes/' });
 
-    const selectedFiles = files.sort(() => 0.5 - Math.random()).slice(0, 3);
+    const filteredFiles = [];
+    for (const file of files) {
+      const fileUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+      if (!excludeUrls.includes(fileUrl)) {
+        filteredFiles.push(file);
+      }
+    }
+
+    const selectedFiles = filteredFiles.sort(() => 0.5 - Math.random()).slice(0, 3);
 
     const uploadPromises = selectedFiles.map(async (file) => {
       const fileUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
